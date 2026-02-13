@@ -3,6 +3,11 @@ import { prisma } from "@/lib/db";
 import { CreateOrderSchema } from "@/lib/validation";
 
 export async function POST(req: Request) {
+  console.log(
+  "DATABASE_URL starts with:",
+  (process.env.DATABASE_URL || "").slice(0, 20)
+);
+
   const json = await req.json().catch(() => null);
   const parsed = CreateOrderSchema.safeParse(json);
   if (!parsed.success) {
