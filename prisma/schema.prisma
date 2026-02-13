@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OrderStatus {
+  DRAFT
+  SUBMITTED
+  ACCEPTED
+  IN_PROGRESS
+  AWAITING_CUSTOMER
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  userId          String
+  stateCode       String
+  deadlineAt      DateTime
+  rushLevel       String      @default("standard")
+  status          OrderStatus @default(DRAFT)
+
+  provider        String      @default("COT")
+  providerOrderId String?
+  providerMeta    Json        @default("{}")
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  items           OrderItem[]
+  events          OrderEvent[]
+  deliverables    Deliverable[]
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  type      String
+  payload   Json
+  options   Json     @default("{}")
+  createdAt DateTime @default(now())
+
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model OrderEvent {
+  id          String      @id @default(cuid())
+  orderId     String
+  at          DateTime    @default(now())
+  status      OrderStatus
+  message     String
+  rawProvider Json?
+
+  order       Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Deliverable {
+  id         String   @id @default(cuid())
+  orderId    String
+  kind       String
+  storageUrl String
+  metadata   Json     @default("{}")
+  createdAt  DateTime @default(now())
+
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
